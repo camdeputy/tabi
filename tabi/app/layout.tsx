@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import "./globals.css";
+import '@/app/globals.css'
 
 export const metadata: Metadata = {
   title: "Tabi",
@@ -13,7 +13,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body>
+      <body className="min-h-screen bg-background font-sans antialiased">
         {children}
       </body>
     </html>
