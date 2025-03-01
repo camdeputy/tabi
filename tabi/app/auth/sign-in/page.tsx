@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { supabase } from '../../../lib/supabaseClient';
 import { useRouter } from "next/navigation";
+import { userService } from "@/lib/services/userService";
 
 const formSchema = z.object({
   emailAddress: z.string().email(),
@@ -27,19 +28,8 @@ export default function LoginPage() {
 
   const handleLogin = async (values: z.infer<typeof formSchema>) => {
     try {
-      let { data, error } = await supabase.auth.signInWithPassword({
-        email: values.emailAddress,
-        password: values.password
-      })
-
-      if (error) {
-        console.error(error.message)
-        throw new Error(error.message)
-      }
-
-      // On successful sign in
-      if (data.user) router.push('/')
-
+      const user = await userService.signIn(values.emailAddress, values.password)
+      if (user) router.push('/')
     } catch (err) {
       console.error('An unexpected error occured during sign in: ', err)
     }

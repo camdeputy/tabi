@@ -2,11 +2,20 @@ import { supabase } from "@/lib/supabaseClient"
 import type { User, Session } from "@supabase/supabase-js";
 
 export const userService = {
+    // Private variable to track authentication state
+    _isAuthenticated: false,
+
+    // Method to get authentication state
+    isAuthenticated: (): boolean => {
+        return userService._isAuthenticated
+    },
+
     getSession: async (): Promise<Session | null> => {
         const { data, error } = await supabase.auth.getSession()
         if (error) {
             throw error
         }
+        userService._isAuthenticated = !!data.session
         return data.session
     },
 
@@ -34,6 +43,7 @@ export const userService = {
         if (error) {
             throw error
         }  
+        userService._isAuthenticated = true
         return data.user
     },
     
@@ -45,6 +55,7 @@ export const userService = {
         if (error) {
             throw error
         }
+        userService._isAuthenticated = true
         return data.user
     },
 
@@ -53,6 +64,7 @@ export const userService = {
         if (error) {
             throw error
         }
+        userService._isAuthenticated = false
     },
 
 }

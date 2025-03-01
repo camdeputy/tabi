@@ -6,8 +6,8 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { Form, FormField, FormItem, FormMessage, FormLabel, FormControl } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { supabase } from '../../../lib/supabaseClient';
 import { useRouter } from "next/navigation";
+import { userService } from "@/lib/services/userService";
 
 const formSchema = z.object({
   emailAddress: z.string().email(),
@@ -34,22 +34,11 @@ export default function SignupPage() {
 
   const handleSignup = async (values: z.infer<typeof formSchema>) => {
     try {
-          let { data, error } = await supabase.auth.signUp({
-            email: values.emailAddress,
-            password: values.password
-          })
-    
-          if (error) {
-            console.error(error.message)
-            throw new Error(error.message)
-          }
-    
-          // On successful sign in
-          if (data.user) router.push('/')
-    
-        } catch (err) {
-          console.error('An unexpected error occured during sign in: ', err)
-        }
+      const user = await userService.signUp(values.emailAddress, values.password)
+      if (user) router.push('/')
+    } catch (err) {
+      console.error('An unexpected error occured during sign up: ', err)
+    }
   }
 
   return (
