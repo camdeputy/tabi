@@ -116,38 +116,70 @@ export default function Header({ isAuthenticated }: HeaderProps) {
       <header className="w-full py-4 px-6 bg-white shadow-md">
         <div className="container mx-auto flex items-center relative">
           <div className="absolute right-0 md:hidden">
-            {isAuthenticated && (
+            {isAuthenticated ? (
               <Sheet>
-                <SheetTrigger asChild>
-                  <Button variant="ghost" size="icon" aria-label="Open menu">
-                    <Menu className="h-6 w-6" />
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="icon" aria-label="Open menu">
+                  <Menu className="h-6 w-6" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="right">
+                <SheetHeader>
+                  <SheetTitle>Menu</SheetTitle>
+                  <SheetDescription>
+                    Access your workout options
+                  </SheetDescription>
+                </SheetHeader>
+                <div className="flex flex-col gap-4 mt-8">
+                  <Button 
+                    variant="ghost" 
+                    className="justify-start"
+                    onClick={handleLogNewExercise}
+                  >
+                    Log Exercise
                   </Button>
-                </SheetTrigger>
-                <SheetContent side="right">
-                  <SheetHeader>
-                    <SheetTitle>Menu</SheetTitle>
-                    <SheetDescription>
-                      Access your workout options
-                    </SheetDescription>
-                  </SheetHeader>
-                  <div className="flex flex-col gap-4 mt-8">
-                    <Button 
-                      variant="ghost" 
-                      className="justify-start"
-                      onClick={handleLogNewExercise}
-                    >
-                      Log Exercise
-                    </Button>
-                    <Button 
-                      variant="ghost" 
-                      className="justify-start"
-                      onClick={handleSignOut}
-                    >
-                      Sign Out
-                    </Button>
-                  </div>
-                </SheetContent>
-              </Sheet>
+                  <Button 
+                    variant="ghost" 
+                    className="justify-start"
+                    onClick={handleSignOut}
+                  >
+                    Sign Out
+                  </Button>
+                </div>
+              </SheetContent>
+            </Sheet>
+            ) : (
+              <Sheet>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="icon" aria-label="Open menu">
+                  <Menu className="h-6 w-6" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="right">
+                <SheetHeader>
+                  <SheetTitle>Menu</SheetTitle>
+                  <SheetDescription>
+                    Sign in to access your data
+                  </SheetDescription>
+                </SheetHeader>
+                <div className="flex flex-col gap-4 mt-8">
+                  <Button 
+                    variant="ghost" 
+                    className="justify-start"
+                    onClick={() => router.push('/auth/sign-in')}
+                  >
+                    Sign In
+                  </Button>
+                  <Button 
+                    variant="ghost" 
+                    className="justify-start"
+                    onClick={() => router.push('/auth/sign-up')}
+                  >
+                    Sign Up
+                  </Button>
+                </div>
+              </SheetContent>
+            </Sheet>
             )}
           </div>
           

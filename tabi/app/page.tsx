@@ -37,7 +37,7 @@ export default function Home() {
       <Header isAuthenticated={isAuthenticated} />
       {!isAuthenticated && (
         <section className="grid place-items-center flex-1 min-h-[calc(100vh-4rem)]">
-          <h1>Sign in to access your data</h1>
+          <a href="/auth/sign-in" className="underline"><h1>Sign in to access your data</h1></a>
         </section>
       )}
       {isAuthenticated && (
