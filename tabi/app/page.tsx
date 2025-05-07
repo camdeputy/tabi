@@ -8,7 +8,7 @@ import LoadingSpinner from '@/components/LoadingSpinner'
 import useSWR from "swr"
 import LiftCard from "@/components/LiftCard"
 
-const fetcher = async () => {
+const fetcher = async () => { 
   return await userService.getSession();
 };
 
