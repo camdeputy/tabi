@@ -3,6 +3,7 @@
 import Header from "@/components/Header"
 import { LinearChartExample } from "@/components/LinearChartExample"
 import { userService } from "@/lib/services/userService"
+import { workoutLogService, MaxWeight } from "@/lib/services/workoutLogService"
 import LoadingSpinner from '@/components/LoadingSpinner'
 import useSWR from "swr"
 import LiftCard from "@/components/LiftCard"
@@ -12,10 +13,18 @@ const fetcher = async () => {
 };
 
 export default function Home() {
-  const { data: user, error, isLoading } = useSWR('user', fetcher);
-  const isAuthenticated = !!user;
+  const { data: user, error: userError, isLoading: isUserLoading } = useSWR('user', fetcher);
+  const isAuthenticated = !!user?.user;
 
-  if (isLoading) {
+  const { data: maxWeights, error: maxWeightsError, isLoading: isMaxWeightsLoading } = useSWR(
+    isAuthenticated ? ['maxWeights', user.user?.id] : null,
+    async () => {
+      if (!user?.user?.id) return [];
+      return await workoutLogService.getLatestMaxWeights(user.user.id);
+    }
+  );
+
+  if (isUserLoading || isMaxWeightsLoading) {
     return (
       <main className="flex-1 grid place-items-center min-h-screen">
         <LoadingSpinner />
@@ -33,28 +42,25 @@ export default function Home() {
       )}
       {isAuthenticated && (
         <div className="flex flex-col gap-8 p-6">
-          {/* Row 1 */}
+          <section className="w-full">
+            <h1 className="text-2xl font-semibold">Logbook - set some PRs!</h1>
+          </section>
+          {/* Highlights */}
           <section className="w-full">
             <h2 className="text-xl font-semibold mb-4">Highlights</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {/* Cards or content for row 1 */}
-              <div className="bg-white rounded-lg shadow p-4">Card 2</div>
-              <div className="bg-white rounded-lg shadow p-4">Card 3</div>
+              {maxWeights?.map((maxWeight) => (
+                <LiftCard
+                  key={maxWeight.exercise_id}
+                  weight={maxWeight.weight}
+                  exercise={maxWeight.exercise_name}
+                  date={new Date(maxWeight.logged_at).toISOString().split('T')[0]}
+                />
+              ))}
             </div>
           </section>
           
-          {/* Row 2 */}
-          <section className="w-full">
-            <h2 className="text-xl font-semibold mb-4">Current Maxes</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {/* Cards or content for row 1 */}
-              <LiftCard weight={225.0} exercise="Barbell Bench Press" date="2024-01-01" />
-              <LiftCard weight={315.0} exercise="Barbell Squat" date="2024-01-02" />
-              <LiftCard weight={405.0} exercise="Deadlift" date="2024-01-03" />
-            </div>
-          </section>
-          
-          {/* Row 3 */}
+          {/* Trends */}
           <section className="w-full">
             <h2 className="text-xl font-semibold mb-4">Trends</h2>
             <div className="w-full bg-white rounded-lg shadow p-4">

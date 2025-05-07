@@ -1,5 +1,12 @@
 import { supabase } from "@/lib/supabaseClient"
-import type { User, Session } from "@supabase/supabase-js";
+import type { User } from "@supabase/supabase-js";
+
+export interface AppSession {
+  user: {
+    id: string;
+    email?: string;
+  } | null;
+}
 
 export const userService = {
     // Private variable to track authentication state
@@ -10,13 +17,18 @@ export const userService = {
         return userService._isAuthenticated
     },
 
-    getSession: async (): Promise<Session | null> => {
-        const { data, error } = await supabase.auth.getSession()
+    async getSession(): Promise<AppSession> {
+        const { data: { session }, error } = await supabase.auth.getSession()
         if (error) {
             throw error
         }
-        userService._isAuthenticated = !!data.session
-        return data.session
+        userService._isAuthenticated = !!session
+        return {
+            user: session?.user ? {
+                id: session.user.id,
+                email: session.user.email
+            } : null
+        }
     },
 
     getUser: async (): Promise<User | null> => {
@@ -59,7 +71,7 @@ export const userService = {
         return data.user
     },
 
-    signOut: async (): Promise<void> => {
+    async signOut() {
         const { error } = await supabase.auth.signOut()
         if (error) {
             throw error
