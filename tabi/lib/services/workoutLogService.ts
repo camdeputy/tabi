@@ -16,11 +16,7 @@ export interface MaxWeight {
   logged_at: string;
 }
 
-interface WorkoutLogWithExercise extends Omit<WorkoutLog, 'id' | 'user_id' | 'reps'> {
-  exercises: {
-    name: string;
-  };
-}
+const PAGINATION_LIMIT = 6;
 
 export const workoutLogService = {
   async createLog(data: Omit<WorkoutLog, 'id' | 'logged_at'>): Promise<WorkoutLog> {
@@ -37,7 +33,7 @@ export const workoutLogService = {
     return log;
   },
 
-  async getLatestMaxWeights(userId: string, limit: number = 6): Promise<MaxWeight[]> {
+  async getLatestMaxWeights(userId: string, limit: number = PAGINATION_LIMIT): Promise<MaxWeight[]> {
     const { data, error } = await supabase
       .from('workout_logs')
       .select(`

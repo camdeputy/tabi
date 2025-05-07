@@ -22,6 +22,15 @@ import {
 } from "@/components/ui/select"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Menu, Plus } from "lucide-react"
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet"
 import { useToast } from "@/hooks/use-toast"
 
 interface HeaderProps {
@@ -103,31 +112,94 @@ export default function Header({ isAuthenticated }: HeaderProps) {
   }
 
   return (
-    <header className="w-full py-4 px-6 bg-white shadow-md">
-      <div className="container mx-auto flex justify-between items-center">
-        <Link href="/" className="text-2xl font-bold text-blue-600">
-          tabi
-        </Link>
-        <div className="flex gap-4">
-          <Button className="bg-blue-600 text-white hover:bg-blue-700 hover:text-white" variant="outline" onClick={handleLogNewExercise}>Log Exercise</Button>
-          {!isAuthenticated ? (
-            <Link href="/auth/sign-in" legacyBehavior passHref>
-              <Button className="bg-blue-800 text-white hover:bg-blue-900 hover:text-white" variant="outline">Sign In</Button>
-            </Link>
-          ) : (
-            <Button className="bg-blue-800 text-white hover:bg-blue-900 hover:text-white" variant="outline" onClick={handleSignOut}>Sign Out</Button>
-          )}
+    <>
+      <header className="w-full py-4 px-6 bg-white shadow-md">
+        <div className="container mx-auto flex items-center relative">
+          <div className="absolute right-0 md:hidden">
+            {isAuthenticated && (
+              <Sheet>
+                <SheetTrigger asChild>
+                  <Button variant="ghost" size="icon" aria-label="Open menu">
+                    <Menu className="h-6 w-6" />
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="right">
+                  <SheetHeader>
+                    <SheetTitle>Menu</SheetTitle>
+                    <SheetDescription>
+                      Access your workout options
+                    </SheetDescription>
+                  </SheetHeader>
+                  <div className="flex flex-col gap-4 mt-8">
+                    <Button 
+                      variant="ghost" 
+                      className="justify-start"
+                      onClick={handleLogNewExercise}
+                    >
+                      Log Exercise
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      className="justify-start"
+                      onClick={handleSignOut}
+                    >
+                      Sign Out
+                    </Button>
+                  </div>
+                </SheetContent>
+              </Sheet>
+            )}
+          </div>
+          
+          <Link href="/" className="text-2xl font-bold text-blue-600 w-full text-center">
+            tabi
+          </Link>
+
+          <div className="hidden md:flex gap-4 absolute right-0">
+            {!isAuthenticated ? (
+              <Link href="/auth/sign-in" legacyBehavior passHref>
+                <Button className="bg-blue-800 text-white hover:bg-blue-900 hover:text-white" variant="outline">Sign In</Button>
+              </Link>
+            ) : (
+              <>
+                <Button 
+                  className="bg-blue-600 text-white hover:bg-blue-700 hover:text-white" 
+                  variant="outline" 
+                  onClick={handleLogNewExercise}
+                >
+                  Log Exercise
+                </Button>
+                <Button 
+                  className="bg-blue-800 text-white hover:bg-blue-900 hover:text-white" 
+                  variant="outline" 
+                  onClick={handleSignOut}
+                >
+                  Sign Out
+                </Button>
+              </>
+            )}
+          </div>
         </div>
-      </div>
+      </header>
+
+      {isAuthenticated && (
+        <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 md:hidden">
+          <Button
+            size="icon"
+            className="h-14 w-14 rounded-full bg-blue-600 hover:bg-blue-700 shadow-lg"
+            onClick={handleLogNewExercise}
+          >
+            <Plus className="h-6 w-6" />
+          </Button>
+        </div>
+      )}
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Log New Exercise</DialogTitle>
-            <DialogDescription>
-              Enter the details of your exercise.
-            </DialogDescription>
-          </DialogHeader>
+          <DialogTitle>Log New Exercise</DialogTitle>
+          <DialogDescription>
+            Enter the details of your exercise.
+          </DialogDescription>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="exercise">Exercise</Label>
@@ -184,6 +256,6 @@ export default function Header({ isAuthenticated }: HeaderProps) {
           </form>
         </DialogContent>
       </Dialog>
-    </header>
+    </>
   )
 }
