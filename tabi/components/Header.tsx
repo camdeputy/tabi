@@ -189,9 +189,14 @@ export default function Header({ isAuthenticated }: HeaderProps) {
 
           <div className="hidden md:flex gap-4 absolute right-0">
             {!isAuthenticated ? (
-              <Link href="/auth/sign-in" legacyBehavior passHref>
-                <Button className="bg-blue-800 text-white hover:bg-blue-900 hover:text-white" variant="outline">Sign In</Button>
-              </Link>
+              <>
+                <Link href="/auth/sign-in" legacyBehavior passHref>
+                  <Button className="bg-blue-800 text-white hover:bg-blue-900 hover:text-white" variant="outline">Sign In</Button>
+                </Link>
+                <Link href="/auth/sign-up" legacyBehavior passHref>
+                  <Button className="bg-blue-800 text-white hover:bg-blue-900 hover:text-white" variant="outline">Sign Up</Button>
+                </Link>
+              </>
             ) : (
               <>
                 <Button 
