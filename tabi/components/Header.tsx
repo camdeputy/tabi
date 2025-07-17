@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/select"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Menu, Plus } from "lucide-react"
+import { Menu, Plus, Search } from "lucide-react"
 import {
   Sheet,
   SheetContent,
@@ -35,56 +35,76 @@ import { useToast } from "@/hooks/use-toast"
 
 interface HeaderProps {
   isAuthenticated: boolean;
+  user: any;
 }
 
-export default function Header({ isAuthenticated }: HeaderProps) {
+export default function Header({ isAuthenticated, user }: HeaderProps) {
   const router = useRouter();
   const { toast } = useToast();
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [exercise, setExercise] = useState("");
+  
+  const [isWorkoutLogDialogOpen, setIsWorkoutLogDialogOpen] = useState(false);
+  const [isAddExerciseDialogOpen, setIsAddExerciseDialogOpen] = useState(false);
+  const [selectedExerciseId, setSelectedExerciseId] = useState("");
+  const [selectedExerciseType, setSelectedExerciseType] = useState<"global" | "custom" | "">("");
+  const [newExerciseName, setNewExerciseName] = useState("");
   const [weight, setWeight] = useState("");
   const [reps, setReps] = useState("");
   const [exercises, setExercises] = useState<Exercise[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [exerciseSearch, setExerciseSearch] = useState("");
 
-  useEffect(() => {
-    const fetchExercises = async () => {
-      try {
-        const data = await exerciseService.getExercises();
-        setExercises(data);
-      } catch (error) {
-        console.error('Error fetching exercises:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchExercises();
-  }, []);
+  const fetchExercises = async () => {
+    try {
+      const data = await exerciseService.getExercises(user.id);
+      setExercises(data);
+    } catch (error) {
+      console.error('Error fetching exercises:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleSignOut = async () => {
     await userService.signOut();
     router.push('/auth/sign-in');
   }
 
-  const handleLogNewExercise = () => {
-    setIsDialogOpen(true);
+  const handleLogNewExercise = async () => {
+    await fetchExercises();
+    setIsWorkoutLogDialogOpen(true);
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleAddNewExercise = () => {
+    setIsAddExerciseDialogOpen(true);
+  }
+
+  const handleCancel = () => {
+    setIsWorkoutLogDialogOpen(false);
+    setIsAddExerciseDialogOpen(false);
+    setSelectedExerciseId("");
+    setSelectedExerciseType("");
+    setNewExerciseName("")
+    setWeight("");
+    setReps("");
+    setExerciseSearch("");
+  }
+
+  // Filter exercises based on search term
+  const filteredExercises = exercises.filter(ex => 
+    ex.name.toLowerCase().includes(exerciseSearch.toLowerCase())
+  );
+
+  const handleSubmitLog = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
 
     try {
-      const session = await userService.getSession();
-      if (!session?.user) {
-        throw new Error('User not authenticated');
-      }
 
       await workoutLogService.createLog({
-        user_id: session.user.id,
-        exercise_id: exercise,
+        user_id: user.id,
+        exercise_id: selectedExerciseId,
+        exercise_type: selectedExerciseType as "global" | "custom",
         weight: parseFloat(weight),
         reps: parseInt(reps),
       });
@@ -95,10 +115,11 @@ export default function Header({ isAuthenticated }: HeaderProps) {
       });
 
       // Reset form
-      setExercise("");
+      setSelectedExerciseId("");
+      setSelectedExerciseType("");
       setWeight("");
       setReps("");
-      setIsDialogOpen(false);
+      setIsWorkoutLogDialogOpen(false);
     } catch (error) {
       console.error('Error logging workout:', error);
       toast({
@@ -111,8 +132,39 @@ export default function Header({ isAuthenticated }: HeaderProps) {
     }
   }
 
+  const handleSubmitExercise = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+
+    try {
+
+      await exerciseService.createExercise(user.id, newExerciseName);
+
+      toast({
+        title: "Success",
+        description: "Exercise added successfully",
+      });
+
+      // Reset form
+      setNewExerciseName("");
+      setWeight("");
+      setReps("");
+      setIsAddExerciseDialogOpen(false);
+    } catch (error) {
+      console.error('Error adding exercise:', error);
+      toast({
+        title: "Error",
+        description: "Failed to add exercise. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
   return (
     <>
+    {/* Mobile View */}
       <header className="w-full py-4 px-6 bg-white shadow-md">
         <div className="container mx-auto flex items-center relative">
           <div className="absolute right-0 md:hidden">
@@ -137,6 +189,13 @@ export default function Header({ isAuthenticated }: HeaderProps) {
                     onClick={handleLogNewExercise}
                   >
                     Log Exercise
+                  </Button>
+                  <Button 
+                    variant="ghost" 
+                    className="justify-start"
+                    onClick={handleAddNewExercise}
+                  >
+                    Add New Exercise
                   </Button>
                   <Button 
                     variant="ghost" 
@@ -231,29 +290,51 @@ export default function Header({ isAuthenticated }: HeaderProps) {
         </div>
       )}
 
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent>
+      <Dialog open={isWorkoutLogDialogOpen} onOpenChange={setIsWorkoutLogDialogOpen}>
+        <DialogContent className="w-[90%] rounded-xl">
           <DialogTitle>Log New Exercise</DialogTitle>
           <DialogDescription>
             Enter the details of your exercise.
           </DialogDescription>
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmitLog} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="exercise">Exercise</Label>
-              <Select value={exercise} onValueChange={setExercise}>
+              <Select value={selectedExerciseId} onValueChange={(value) => {
+                setSelectedExerciseId(value);
+                // Find the selected exercise to get its type
+                const selectedExercise = exercises.find(ex => ex.id === value);
+                setSelectedExerciseType(selectedExercise?.exercise_type || "");
+                console.log(value);
+              }}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select an exercise" />
                 </SelectTrigger>
                 <SelectContent>
-                  {isLoading ? (
-                    <SelectItem value="loading" disabled>Loading exercises...</SelectItem>
-                  ) : (
-                    exercises.map((ex) => (
-                      <SelectItem key={ex.id} value={ex.id}>
-                        {ex.name}
-                      </SelectItem>
-                    ))
-                  )}
+                  <div className="p-2">
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                      <Input
+                        placeholder="Search exercises..."
+                        value={exerciseSearch}
+                        onChange={(e) => setExerciseSearch(e.target.value)}
+                        className="pl-10 h-8 text-sm"
+                        onKeyDown={(e) => e.stopPropagation()}
+                      />
+                    </div>
+                  </div>
+                  <div className="max-h-60 overflow-y-auto">
+                    {isLoading ? (
+                      <SelectItem value="loading" disabled>Loading exercises...</SelectItem>
+                    ) : filteredExercises.length === 0 ? (
+                      <SelectItem value="no-results" disabled>No exercises found</SelectItem>
+                    ) : (
+                      filteredExercises.map((ex) => (
+                        <SelectItem key={ex.id} value={ex.id}>
+                          {ex.name} {ex.exercise_type === 'custom' && '(Custom)'}
+                        </SelectItem>
+                      ))
+                    )}
+                  </div>
                 </SelectContent>
               </Select>
             </div>
@@ -283,7 +364,7 @@ export default function Header({ isAuthenticated }: HeaderProps) {
             </div>
 
             <div className="flex justify-end gap-2">
-              <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
+              <Button type="button" variant="outline" onClick={() => handleCancel()}>
                 Cancel
               </Button>
               <Button type="submit" disabled={isSubmitting}>
@@ -292,6 +373,37 @@ export default function Header({ isAuthenticated }: HeaderProps) {
             </div>
           </form>
         </DialogContent>
+      </Dialog>
+
+      <Dialog open={isAddExerciseDialogOpen} onOpenChange={setIsAddExerciseDialogOpen}>
+        <DialogContent className="w-[90%] rounded-xl">
+          <DialogTitle>Add New Exercise</DialogTitle>
+        <DialogDescription>
+            Enter the name of the exercise you want to add.
+        </DialogDescription>
+        <form onSubmit={handleSubmitExercise} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="exercise">Exercise</Label>
+              <Input
+                id="exercise"
+                type="text"
+                value={newExerciseName}
+                onChange={(e) => setNewExerciseName(e.target.value)}
+                placeholder="Enter exercise"
+                required
+              />
+            </div>
+
+            <div className="flex justify-end gap-2">
+              <Button type="button" variant="outline" onClick={() => handleCancel()}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? "Adding..." : "Add"}
+              </Button>
+            </div>
+          </form>
+          </DialogContent>
       </Dialog>
     </>
   )
