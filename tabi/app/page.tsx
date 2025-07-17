@@ -34,7 +34,7 @@ export default function Home() {
   
   return (
     <main className="flex-1">
-      <Header isAuthenticated={isAuthenticated} />
+      <Header isAuthenticated={isAuthenticated} user={user?.user} />
       {!isAuthenticated && (
         <section className="grid place-items-center flex-1 min-h-[calc(100vh-4rem)]">
           <a href="/auth/sign-in" className="underline"><h1>Sign in to access your data</h1></a>
@@ -64,7 +64,7 @@ export default function Home() {
           <section className="w-full">
             <h2 className="text-xl font-semibold mb-4">Trends</h2>
             <div className="w-full bg-white rounded-lg shadow p-4">
-              <LinearChartExample />
+              <LinearChartExample exerciseName={maxWeights![0].exercise_name} maxWeight={maxWeights![0].weight} />
             </div>
           </section>
         </div>
