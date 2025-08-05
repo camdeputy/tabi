@@ -15,6 +15,7 @@ export interface MaxWeight {
   exercise_name: string;
   weight: number;
   logged_at: string;
+  is_favorite?: boolean;
 }
 
 const PAGINATION_LIMIT = 6;
@@ -67,6 +68,14 @@ export const workoutLogService = {
       .in('id', customExerciseIds)
       .eq('user_id', userId);
 
+    // Get favorite exercises for this user
+    const { data: favoriteExercises } = await supabase
+      .from('favorite_exercises')
+      .select('exercise_id')
+      .eq('user_id', userId);
+
+    const favoriteExerciseIds = new Set(favoriteExercises?.map(fav => fav.exercise_id) || []);
+
     // Create a map of exercise names
     const exerciseNameMap = new Map<string, string>();
     globalExercises?.forEach(ex => exerciseNameMap.set(ex.id, ex.name));
@@ -82,7 +91,8 @@ export const workoutLogService = {
           exercise_id: log.exercise_id,
           exercise_name: exerciseName,
           weight: log.weight,
-          logged_at: log.logged_at
+          logged_at: log.logged_at,
+          is_favorite: favoriteExerciseIds.has(log.exercise_id)
         };
       }
       return acc;
